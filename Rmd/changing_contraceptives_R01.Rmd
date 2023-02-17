@@ -1,0 +1,105 @@
+---
+title: "Changing Contraceptives"
+author: "Christelle Colin-Leitzinger"
+date: '`r Sys.Date()`'
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    toc_collapsed: false
+    theme: united
+    highlight: pygments
+    df_print: paged
+editor_options: 
+  chunk_output_type: console
+---
+
+<style type="text/css">
+.figure {
+   margin-top: 25px;
+   <!-- margin-bottom: 100px; -->
+}
+
+table {
+    margin-top: 10px;
+    margin-bottom: 25px;
+}
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,
+                      warning = FALSE,
+                      message = FALSE,
+                      cache = FALSE,
+                      fig.align='center'
+                      )
+
+```
+
+```{r library}
+library(tidyverse)
+library(haven)
+library(gtsummary)
+theme_gtsummary_compact()
+theme_set(theme_classic())
+```
+
+<br>
+
+```{r load data}
+path <- fs::path("","Volumes","Peres_Research", "Changing contraceptives R01")
+
+clinical_data_short <-
+  read_sas(paste0(path,"/data/iud_short.sas7bdat")) %>% 
+  select(suid, casecon)
+clinical_data_long <-
+  read_csv(paste0(path,"/data/iud_long.csv")) %>% 
+  select(suid, casecon) %>% 
+  bind_rows(clinical_data_short)
+
+clinical_data <-
+  read_csv(paste0(path,"/data/recoded_iud_long.csv"),
+           na = c(".", "888")
+           )
+```
+
+
+```{r clean data}
+clinical_data <- clinical_data %>% 
+  full_join(., clinical_data_long,
+            by = "suid")
+
+clinical_data1 <- clinical_data %>% 
+  mutate(across(.cols = 
+                  c(everiud, evercondoms, everimplant, evershot, everothbar), 
+                .fns = ~ na_if(., 9))) %>% 
+  mutate(across(.cols = 
+                  c(patch, ring, depo, norplant), 
+                .fns = ~ na_if(., 8)))
+```
+
+***
+
+<br>
+
+# Basic summary
+```{r}
+# clinical_data1 %>% 
+#   select(everiud, evercondoms, everimplant, evershot, everothbar,
+#          patch, ring, depo, norplant,
+#          iuddur, ends_with("mos")) %>% 
+#   tbl_summary(type = list(ends_with("mos") ~ "continuous"))
+
+clinical_data1 %>% 
+  select(everiud, evercondoms, everimplant, evershot, everothbar,
+         patch, ring, depo, norplant, 
+         iuddur, ends_with("mos"), casecon) %>% 
+  tbl_summary(by = casecon,
+              type = list(ends_with("mos") ~ "continuous")) %>% 
+  bold_labels() %>% add_overall() %>% 
+  add_p() %>% bold_p(t= 0.5)
+```
+
+
+
+
