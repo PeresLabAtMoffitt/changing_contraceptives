@@ -30,7 +30,7 @@ clinical_data_short <- clinical_data_short %>%
 
 clinical_data_long <- clinical_data_long %>% 
   bind_rows(clinical_data_short)
-############################################################# Cleaning
+############################################################# Recoding
 number_of_agecolumn = length(colnames(clinical_data_long %>% select(starts_with("QE3"))))
                              
 clinical_data_long1 <- clinical_data_long %>% 
